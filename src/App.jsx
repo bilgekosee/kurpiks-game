@@ -1,35 +1,77 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-
+import "./App.css";
+import { useRef, useEffect } from "react";
 function App() {
-  const [count, setCount] = useState(0)
+  const canvasRef = useRef(null);
 
+  const y = useRef(200);
+  const vy = useRef(0);
+  const isJumping = useRef(false);
+  const gravity = 0.5;
+  const jumpPower = -10;
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+    img.src = "/kurpikscat.png";
+
+    img.onload = () => {
+      const draw = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (isJumping.current) {
+          vy.current += gravity;
+          y.current += vy.current;
+
+          if (y.current < 20) {
+            y.current = 20;
+            vy.current = 0;
+          }
+
+          if (y.current >= 200) {
+            y.current = 200;
+            vy.current = 0;
+            isJumping.current = false;
+          }
+        } else {
+          y.current = 200;
+          vy.current = 0;
+          isJumping.current = false;
+        }
+
+        ctx.fillStyle = "black";
+        ctx.font = "20px Arial";
+        ctx.fillText("Kurpiks burada!", 100, 50);
+        ctx.drawImage(img, 180, y.current, 40, 40);
+        requestAnimationFrame(draw);
+      };
+      draw();
+    };
+
+    const handleKeyDown = (e) => {
+      if (e.code === "Space" && !isJumping.current) {
+        e.preventDefault();
+        vy.current = jumpPower;
+        isJumping.current = true;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="kurpiks-app-container">
+      <span>Kurpiks alanı</span>
+      <canvas
+        className="kurpiks-canvas"
+        width={400}
+        height={300}
+        ref={canvasRef}
+      ></canvas>
+    </div>
+  );
 }
 
-export default App
+export default App;
