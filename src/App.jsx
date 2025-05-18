@@ -1,38 +1,56 @@
 import "./App.css";
 import { useRef, useEffect } from "react";
+
 function App() {
   const canvasRef = useRef(null);
   const scoreRef = useRef(0);
   const plusEffect = useRef(null);
+  const kurpiksX = useRef(200);
+  const kurpiksW = 40;
+  const kurpiksH = 32;
+  const hasCollided = useRef(false);
 
   const y = useRef(200);
   const vy = useRef(0);
   const isJumping = useRef(false);
-  const gravity = 0.5;
-  const jumpPower = -10;
+  const gravity = 0.1;
+  const jumpPower = -15;
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     const ctx = canvas.getContext("2d");
+
     const img = new Image();
     img.src = "/kurpikscat.png";
 
     const mouseImg = new Image();
     mouseImg.src = "/mouse.png";
+
+    const plusImg = new Image();
+    plusImg.src = "/plus.png";
+
     const mouse = {
       x: 400,
-      y: 200,
+      y: 210,
       width: 32,
       height: 32,
-      speed: 1,
+      speed: 3,
     };
 
-    img.onload = () => {
-      const plusImg = new Image();
-      plusImg.src = "/plus.png";
+    let imagesLoaded = 0;
+    const checkAllLoaded = () => {
+      imagesLoaded++;
+      if (imagesLoaded === 3) {
+        startGame();
+      }
+    };
 
+    img.onload = checkAllLoaded;
+    mouseImg.onload = checkAllLoaded;
+    plusImg.onload = checkAllLoaded;
+
+    const startGame = () => {
       const draw = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -53,43 +71,65 @@ function App() {
         } else {
           y.current = 200;
           vy.current = 0;
-          isJumping.current = false;
         }
 
         ctx.fillStyle = "black";
         ctx.font = "20px Arial";
         ctx.fillText("Kurpiks burada!", 100, 50);
-        ctx.drawImage(img, 180, y.current, 40, 40);
+        ctx.drawImage(img, kurpiksX.current, y.current, kurpiksW, kurpiksH);
 
         mouse.x -= mouse.speed;
-        if (mouse.x < -mouse.width) {
-          mouse.x = 400 + Math.random() * 100;
+        if (mouse.x + mouse.width < 0) {
+          mouse.x = canvas.width + Math.random() * 100;
+          hasCollided.current = false;
         }
 
         ctx.drawImage(mouseImg, mouse.x, mouse.y, mouse.width, mouse.height);
 
-        const kurpiksX = 180;
-        const kurpiksY = y.current;
-        const kurpiksW = 40;
-        const kurpiksH = 40;
+        const kurpiksBox = {
+          x: kurpiksX.current,
+          y: y.current,
+          width: kurpiksW,
+          height: kurpiksH,
+        };
 
         const isColliding =
-          mouse.x < kurpiksX + kurpiksW &&
-          mouse.x + mouse.width > kurpiksX &&
-          mouse.y < kurpiksY + kurpiksH &&
-          mouse.y + mouse.height > kurpiksY;
+          kurpiksBox.x < mouse.x + mouse.width &&
+          kurpiksBox.x + kurpiksBox.width > mouse.x &&
+          kurpiksBox.y < mouse.y + mouse.height &&
+          kurpiksBox.y + kurpiksBox.height > mouse.y;
 
-        if (isColliding && !isJumping.current && y.current >= 195) {
+        ctx.strokeStyle = "yellow";
+        ctx.strokeRect(
+          kurpiksBox.x,
+          kurpiksBox.y,
+          kurpiksBox.width,
+          kurpiksBox.height
+        );
+
+        ctx.strokeStyle = "magenta";
+        ctx.strokeRect(mouse.x, mouse.y, mouse.width, mouse.height);
+
+        const isAboveMouse = kurpiksBox.y + kurpiksBox.height < mouse.y + 5;
+
+        if (isColliding && !isAboveMouse && !hasCollided.current) {
+          console.log("✔ PUAN ALINDI");
+
           scoreRef.current++;
+
           plusEffect.current = {
-            x: kurpiksX + 10,
-            y: kurpiksY - 10,
+            x: kurpiksBox.x + 10,
+            y: kurpiksBox.y - 10,
             opacity: 1,
           };
 
-          mouse.x = 400 + Math.random() * 100;
+          hasCollided.current = true;
+
+          mouse.x = canvas.width + 300 + Math.random() * 100;
+          mouse.y = 150 + Math.random() * 50;
         }
-        if (plusEffect.current && plusImg.complete) {
+
+        if (plusEffect.current) {
           ctx.globalAlpha = plusEffect.current.opacity;
           ctx.drawImage(
             plusImg,
@@ -110,6 +150,7 @@ function App() {
 
         requestAnimationFrame(draw);
       };
+
       draw();
     };
 
@@ -124,6 +165,7 @@ function App() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
   return (
     <div className="kurpiks-app-container">
       <span>Kurpiks alanı</span>
