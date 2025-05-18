@@ -2,6 +2,8 @@ import "./App.css";
 import { useRef, useEffect } from "react";
 function App() {
   const canvasRef = useRef(null);
+  const scoreRef = useRef(0);
+  const plusEffect = useRef(null);
 
   const y = useRef(200);
   const vy = useRef(0);
@@ -17,7 +19,20 @@ function App() {
     const img = new Image();
     img.src = "/kurpikscat.png";
 
+    const mouseImg = new Image();
+    mouseImg.src = "/mouse.png";
+    const mouse = {
+      x: 400,
+      y: 200,
+      width: 32,
+      height: 32,
+      speed: 1,
+    };
+
     img.onload = () => {
+      const plusImg = new Image();
+      plusImg.src = "/plus.png";
+
       const draw = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -45,6 +60,54 @@ function App() {
         ctx.font = "20px Arial";
         ctx.fillText("Kurpiks burada!", 100, 50);
         ctx.drawImage(img, 180, y.current, 40, 40);
+
+        mouse.x -= mouse.speed;
+        if (mouse.x < -mouse.width) {
+          mouse.x = 400 + Math.random() * 100;
+        }
+
+        ctx.drawImage(mouseImg, mouse.x, mouse.y, mouse.width, mouse.height);
+
+        const kurpiksX = 180;
+        const kurpiksY = y.current;
+        const kurpiksW = 40;
+        const kurpiksH = 40;
+
+        const isColliding =
+          mouse.x < kurpiksX + kurpiksW &&
+          mouse.x + mouse.width > kurpiksX &&
+          mouse.y < kurpiksY + kurpiksH &&
+          mouse.y + mouse.height > kurpiksY;
+
+        if (isColliding && !isJumping.current && y.current >= 195) {
+          scoreRef.current++;
+          plusEffect.current = {
+            x: kurpiksX + 10,
+            y: kurpiksY - 10,
+            opacity: 1,
+          };
+
+          mouse.x = 400 + Math.random() * 100;
+        }
+        if (plusEffect.current && plusImg.complete) {
+          ctx.globalAlpha = plusEffect.current.opacity;
+          ctx.drawImage(
+            plusImg,
+            plusEffect.current.x,
+            plusEffect.current.y,
+            16,
+            16
+          );
+          ctx.globalAlpha = 1;
+
+          plusEffect.current.opacity -= 0.01;
+          plusEffect.current.y -= 0.5;
+
+          if (plusEffect.current.opacity <= 0) {
+            plusEffect.current = null;
+          }
+        }
+
         requestAnimationFrame(draw);
       };
       draw();
