@@ -9,6 +9,7 @@ function App() {
   const kurpiksW = 40;
   const kurpiksH = 32;
   const hasCollided = useRef(false);
+  const currentCatImg = useRef(null);
 
   const y = useRef(200);
   const vy = useRef(0);
@@ -30,6 +31,9 @@ function App() {
     const plusImg = new Image();
     plusImg.src = "/plus.png";
 
+    const badCatImg = new Image();
+    badCatImg.src = "/badcat.png";
+
     const mouse = {
       x: 400,
       y: 210,
@@ -38,17 +42,30 @@ function App() {
       speed: 3,
     };
 
+    const dog = {
+      x: 500,
+      y: 210,
+      width: 32,
+      height: 32,
+      speed: 2.5,
+    };
+    const dogImg = new Image();
+    dogImg.src = "/kopkop.png";
+
     let imagesLoaded = 0;
     const checkAllLoaded = () => {
       imagesLoaded++;
-      if (imagesLoaded === 3) {
+      if (imagesLoaded === 4) {
         startGame();
       }
     };
 
     img.onload = checkAllLoaded;
+    currentCatImg.current = img;
+
     mouseImg.onload = checkAllLoaded;
     plusImg.onload = checkAllLoaded;
+    dogImg.onload = checkAllLoaded;
 
     const startGame = () => {
       const draw = () => {
@@ -76,13 +93,26 @@ function App() {
         ctx.fillStyle = "black";
         ctx.font = "20px Arial";
         ctx.fillText("Kurpiks burada!", 100, 50);
-        ctx.drawImage(img, kurpiksX.current, y.current, kurpiksW, kurpiksH);
+        ctx.drawImage(
+          currentCatImg.current,
+          kurpiksX.current,
+          y.current,
+          kurpiksW,
+          kurpiksH
+        );
 
         mouse.x -= mouse.speed;
         if (mouse.x + mouse.width < 0) {
           mouse.x = canvas.width + Math.random() * 100;
           hasCollided.current = false;
         }
+        dog.x -= dog.speed;
+        if (dog.x + dog.width < 0) {
+          dog.x = canvas.width + Math.random() * 200;
+        }
+        ctx.drawImage(dogImg, dog.x, dog.y, dog.width, dog.height);
+        ctx.strokeStyle = "brown";
+        ctx.strokeRect(dog.x, dog.y, dog.width, dog.height);
 
         ctx.drawImage(mouseImg, mouse.x, mouse.y, mouse.width, mouse.height);
 
@@ -98,6 +128,16 @@ function App() {
           kurpiksBox.x + kurpiksBox.width > mouse.x &&
           kurpiksBox.y < mouse.y + mouse.height &&
           kurpiksBox.y + kurpiksBox.height > mouse.y;
+        const isDogColliding =
+          kurpiksBox.x < dog.x + dog.width &&
+          kurpiksBox.x + kurpiksBox.width > dog.x &&
+          kurpiksBox.y < dog.y + dog.height &&
+          kurpiksBox.y + kurpiksBox.height > dog.y;
+
+        if (isDogColliding) {
+          console.log("💀 GAME OVER!");
+          currentCatImg.current = badCatImg;
+        }
 
         ctx.strokeStyle = "yellow";
         ctx.strokeRect(
