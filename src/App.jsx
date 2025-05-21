@@ -10,6 +10,7 @@ function App() {
   const kurpiksH = 32;
   const hasCollided = useRef(false);
   const currentCatImg = useRef(null);
+  const isGameOver = useRef(false);
 
   const y = useRef(200);
   const vy = useRef(0);
@@ -34,6 +35,9 @@ function App() {
     const badCatImg = new Image();
     badCatImg.src = "/badcat.png";
 
+    const gameOverImg = new Image();
+    gameOverImg.src = "/gameover.png";
+
     const mouse = {
       x: 400,
       y: 210,
@@ -55,21 +59,32 @@ function App() {
     let imagesLoaded = 0;
     const checkAllLoaded = () => {
       imagesLoaded++;
-      if (imagesLoaded === 4) {
+      if (imagesLoaded === 5) {
         startGame();
       }
     };
 
     img.onload = checkAllLoaded;
     currentCatImg.current = img;
-
     mouseImg.onload = checkAllLoaded;
     plusImg.onload = checkAllLoaded;
     dogImg.onload = checkAllLoaded;
+    gameOverImg.onload = checkAllLoaded;
 
     const startGame = () => {
       const draw = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (isGameOver.current) {
+          ctx.drawImage(
+            badCatImg,
+            kurpiksX.current,
+            y.current,
+            kurpiksW,
+            kurpiksH
+          );
+          ctx.drawImage(gameOverImg, 100, 120, 200, 50);
+          return;
+        }
 
         if (isJumping.current) {
           vy.current += gravity;
@@ -134,9 +149,10 @@ function App() {
           kurpiksBox.y < dog.y + dog.height &&
           kurpiksBox.y + kurpiksBox.height > dog.y;
 
-        if (isDogColliding) {
+        if (isDogColliding && !isGameOver.current) {
           console.log("💀 GAME OVER!");
           currentCatImg.current = badCatImg;
+          isGameOver.current = true;
         }
 
         ctx.strokeStyle = "yellow";
