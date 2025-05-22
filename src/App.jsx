@@ -15,8 +15,8 @@ function App() {
   const y = useRef(200);
   const vy = useRef(0);
   const isJumping = useRef(false);
-  const gravity = 0.1;
-  const jumpPower = -15;
+  const gravity = 0.08;
+  const jumpPower = -18;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -74,6 +74,9 @@ function App() {
     const startGame = () => {
       const draw = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "black";
+        ctx.font = "16px monospace";
+        ctx.fillText("Score: " + scoreRef.current, 10, 20);
         if (isGameOver.current) {
           ctx.drawImage(
             badCatImg,
