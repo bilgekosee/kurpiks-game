@@ -3,40 +3,41 @@ import { useRef, useEffect } from "react";
 
 function App() {
   const canvasRef = useRef(null);
-  const scoreRef = useRef(0);
-  const plusEffect = useRef(null);
   const kurpiksX = useRef(200);
   const kurpiksW = 40;
   const kurpiksH = 32;
-  const hasCollided = useRef(false);
-  const currentCatImg = useRef(null);
-  const isGameOver = useRef(false);
-
   const y = useRef(200);
   const vy = useRef(0);
   const isJumping = useRef(false);
+  const isGameOver = useRef(false);
+  const scoreRef = useRef(0);
+  const hasCollided = useRef(false);
+  const plusEffect = useRef(null);
+
   const gravity = 0.08;
   const jumpPower = -18;
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
     const ctx = canvas.getContext("2d");
 
-    const img = new Image();
-    img.src = "/kurpikscat.png";
-
-    const mouseImg = new Image();
-    mouseImg.src = "/mouse.png";
-
-    const plusImg = new Image();
-    plusImg.src = "/plus.png";
+    const kurpiksImg = new Image();
+    kurpiksImg.src = "/kurpikscat.png";
 
     const badCatImg = new Image();
     badCatImg.src = "/badcat.png";
 
     const gameOverImg = new Image();
     gameOverImg.src = "/gameover.png";
+
+    const dogImg = new Image();
+    dogImg.src = "/kopkop.png";
+
+    const mouseImg = new Image();
+    mouseImg.src = "/mouse.png";
+
+    const plusImg = new Image();
+    plusImg.src = "/plus.png";
 
     const mouse = {
       x: 400,
@@ -53,30 +54,30 @@ function App() {
       height: 32,
       speed: 2.5,
     };
-    const dogImg = new Image();
-    dogImg.src = "/kopkop.png";
 
     let imagesLoaded = 0;
-    const checkAllLoaded = () => {
+    const onImageLoad = () => {
       imagesLoaded++;
-      if (imagesLoaded === 5) {
+      if (imagesLoaded === 6) {
         startGame();
       }
     };
 
-    img.onload = checkAllLoaded;
-    currentCatImg.current = img;
-    mouseImg.onload = checkAllLoaded;
-    plusImg.onload = checkAllLoaded;
-    dogImg.onload = checkAllLoaded;
-    gameOverImg.onload = checkAllLoaded;
+    kurpiksImg.onload = onImageLoad;
+    badCatImg.onload = onImageLoad;
+    gameOverImg.onload = onImageLoad;
+    dogImg.onload = onImageLoad;
+    mouseImg.onload = onImageLoad;
+    plusImg.onload = onImageLoad;
 
     const startGame = () => {
       const draw = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "black";
+
         ctx.font = "16px monospace";
+        ctx.fillStyle = "black";
         ctx.fillText("Score: " + scoreRef.current, 10, 20);
+
         if (isGameOver.current) {
           ctx.drawImage(
             badCatImg,
@@ -97,7 +98,6 @@ function App() {
             y.current = 20;
             vy.current = 0;
           }
-
           if (y.current >= 200) {
             y.current = 200;
             vy.current = 0;
@@ -108,11 +108,8 @@ function App() {
           vy.current = 0;
         }
 
-        ctx.fillStyle = "black";
-        ctx.font = "20px Arial";
-        ctx.fillText("Kurpiks burada!", 100, 50);
         ctx.drawImage(
-          currentCatImg.current,
+          kurpiksImg,
           kurpiksX.current,
           y.current,
           kurpiksW,
@@ -122,58 +119,54 @@ function App() {
         mouse.x -= mouse.speed;
         if (mouse.x + mouse.width < 0) {
           mouse.x = canvas.width + Math.random() * 100;
+          mouse.y = 150 + Math.random() * 50;
           hasCollided.current = false;
         }
-        dog.x -= dog.speed;
-        if (dog.x + dog.width < 0) {
-          dog.x = canvas.width + Math.random() * 200;
-        }
-        ctx.drawImage(dogImg, dog.x, dog.y, dog.width, dog.height);
-        ctx.strokeStyle = "brown";
-        ctx.strokeRect(dog.x, dog.y, dog.width, dog.height);
 
         ctx.drawImage(mouseImg, mouse.x, mouse.y, mouse.width, mouse.height);
 
+        dog.x -= dog.speed;
+        if (dog.x + dog.width < 0) {
+          dog.x = canvas.width + 100;
+        }
+
+        ctx.drawImage(dogImg, dog.x, dog.y, dog.width, dog.height);
+
         const kurpiksBox = {
-          x: kurpiksX.current,
-          y: y.current,
-          width: kurpiksW,
-          height: kurpiksH,
+          x: kurpiksX.current + 6,
+          y: y.current + 4,
+          width: kurpiksW - 12,
+          height: kurpiksH - 8,
         };
 
-        const isColliding =
+        const dogBox = {
+          x: dog.x + 6,
+          y: dog.y + 4,
+          width: dog.width - 12,
+          height: dog.height - 8,
+        };
+
+        const isDogColliding =
+          kurpiksBox.x < dogBox.x + dogBox.width &&
+          kurpiksBox.x + kurpiksBox.width > dogBox.x &&
+          kurpiksBox.y < dogBox.y + dogBox.height &&
+          kurpiksBox.y + kurpiksBox.height > dogBox.y;
+
+        if (isDogColliding) {
+          console.log("Çarpışma oldu");
+          isGameOver.current = true;
+        }
+
+        const isMouseColliding =
           kurpiksBox.x < mouse.x + mouse.width &&
           kurpiksBox.x + kurpiksBox.width > mouse.x &&
           kurpiksBox.y < mouse.y + mouse.height &&
           kurpiksBox.y + kurpiksBox.height > mouse.y;
-        const isDogColliding =
-          kurpiksBox.x < dog.x + dog.width &&
-          kurpiksBox.x + kurpiksBox.width > dog.x &&
-          kurpiksBox.y < dog.y + dog.height &&
-          kurpiksBox.y + kurpiksBox.height > dog.y;
-
-        if (isDogColliding && !isGameOver.current) {
-          console.log("💀 GAME OVER!");
-          currentCatImg.current = badCatImg;
-          isGameOver.current = true;
-        }
-
-        ctx.strokeStyle = "yellow";
-        ctx.strokeRect(
-          kurpiksBox.x,
-          kurpiksBox.y,
-          kurpiksBox.width,
-          kurpiksBox.height
-        );
-
-        ctx.strokeStyle = "magenta";
-        ctx.strokeRect(mouse.x, mouse.y, mouse.width, mouse.height);
 
         const isAboveMouse = kurpiksBox.y + kurpiksBox.height < mouse.y + 5;
 
-        if (isColliding && !isAboveMouse && !hasCollided.current) {
-          console.log("✔ PUAN ALINDI");
-
+        if (isMouseColliding && !isAboveMouse && !hasCollided.current) {
+          console.log("PUAN ALINDI");
           scoreRef.current++;
 
           plusEffect.current = {
@@ -184,8 +177,13 @@ function App() {
 
           hasCollided.current = true;
 
-          mouse.x = canvas.width + 300 + Math.random() * 100;
+          mouse.x = canvas.width + 500 + Math.random() * 100;
           mouse.y = 150 + Math.random() * 50;
+        }
+        if (mouse.x + mouse.width < 0) {
+          mouse.x = canvas.width + Math.random() * 100;
+          mouse.y = 150 + Math.random() * 50;
+          hasCollided.current = false;
         }
 
         if (plusEffect.current) {
@@ -214,8 +212,7 @@ function App() {
     };
 
     const handleKeyDown = (e) => {
-      if (e.code === "Space" && !isJumping.current) {
-        e.preventDefault();
+      if (e.code === "Space" && !isJumping.current && !isGameOver.current) {
         vy.current = jumpPower;
         isJumping.current = true;
       }
@@ -227,13 +224,12 @@ function App() {
 
   return (
     <div className="kurpiks-app-container">
-      <span>Kurpiks alanı</span>
       <canvas
         className="kurpiks-canvas"
         width={400}
         height={300}
         ref={canvasRef}
-      ></canvas>
+      />
     </div>
   );
 }
