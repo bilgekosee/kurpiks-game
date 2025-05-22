@@ -39,6 +39,9 @@ function App() {
     const plusImg = new Image();
     plusImg.src = "/plus.png";
 
+    const background = new Image();
+    background.src = "/background.png";
+
     const mouse = {
       x: 400,
       y: 210,
@@ -73,7 +76,7 @@ function App() {
     const startGame = () => {
       const draw = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
+        ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
         ctx.font = "16px monospace";
         ctx.fillStyle = "black";
         ctx.fillText("Score: " + scoreRef.current, 10, 20);
